@@ -10,11 +10,15 @@ from UserLogin import UserLogin
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
 SECRET_KEY = 'fdgfh78@#5?>gfhf89dx,v06k'
+MAX_CONTENT_LENGTH =  1024 * 1024
 
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
 login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Пожалуйста авторизуйтесь'
+login_manager.login_message_category = 'success'
 dbase = None
 
 
@@ -98,12 +102,15 @@ def showPost(id_post):
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('profile'))
     if request.method == "POST":
         user = dbase.getUserByEmail(request.form['email'])
         if user and check_password_hash(user['psw'], request.form['psw']):
             userlogin = UserLogin().create(user)
-            login_user(userlogin)
-            return redirect(url_for('index'))
+            rm = True if request.form.get('remainme') else False
+            login_user(userlogin, remember = rm)
+            return redirect(request.args.get("next") or url_for("profile"))
 
         flash("Неверная пара логин/пароль", "error")
 
@@ -128,6 +135,18 @@ def register():
 
     return render_template("register.html", menu=dbase.getMenu(), title="Регистрация")
 
+@app.route('/profile')
+@login_required
+def profile():
+    return f"""<a href="{url_for('logout')}">Выйти из профиля</a>
+                user info: {current_user.get_id()}"""
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("Вы вышли из аккаунта", "success")
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(debug=True)
