@@ -1,22 +1,44 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{{ super() }}
-{% for cat, msg in get_flashed_messages(True) %}
-<div class="flash {{cat}}">{{msg}}</div>
-{% endfor %}
-<form 
-{% if request.args.get('next') %}
-action="{{ url_for('login', next=request.args.get('next')) }}" 
-{% else %}
-action="{{ url_for('login') }}" 
-{% endif %}
-method="post" class="form-contact">
-<p><label>Email: </label> <input type="text" name="email" value="" required />
-<p><label>Пароль: </label> <input type="password" name="psw" value="" required />
-<p><input type="checkbox" name="remainme" /> Запомнить меня
-<p><input type="submit" value="Войти" />
-<hr align=left width="300px">
-<p><a href="{{url_for('register')}}">Регистрация</a>
-</form>
+    {{ super() }}
+    {% for cat, msg in get_flashed_messages(True) %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    <form
+            {% if request.args.get('next') %}
+                action="{{ url_for('login', next=request.args.get('next')) }}"
+            {% else %}
+                action="{{ url_for('login') }}"
+            {% endif %}
+                method="post" class="form-contact">
+        {{ form.hidden_tag() }}
+        {{ form.email.label() }}
+        {% if form.email.errors %}
+            {{ form.email(class="invalid") }}
+            <span class="invalid-feedback">
+         {% for e in form.email.errors %}
+             {{ e }}
+         {% endfor %}
+</span>
+        {% else %}
+            {{ form.email() }}
+        {% endif %}
+
+        {{ form.psw.label() }}
+        {% if form.psw.errors %}
+            {{ form.psw(class="invalid") }}
+            <span class="invalid-feedback">
+         {% for e in form.psw.errors %}
+             {{ e }}
+         {% endfor %}
+</span>
+        {% else %}
+            {{ form.psw() }}
+        {% endif %}
+        {{ form.remember.label() }} {{ form.remember() }}
+        {{ form.submit() }}
+        <hr align=left width="300px">
+        <p><a href="{{ url_for('register') }}">Регистрация</a>
+    </form>
 {% endblock %}
